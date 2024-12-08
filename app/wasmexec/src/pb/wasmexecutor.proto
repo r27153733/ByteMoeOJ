@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package wasm;
+
+option go_package = "./wasm";
+
+
+enum CompressionType {
+  None = 0;
+  Zstd = 2;
+}
+
+message WasmExecutionInput {
+  // The input data for stdin (as a byte array).
+  bytes stdin = 1;
+
+  // Arguments to be passed to the Wasm module.
+  repeated string args = 2;
+
+  // Environment variables to be set for the Wasm module.
+  map<string, string> envs = 3;
+
+  // Memory limit for the Wasm module in bytes.
+  uint64 memory_limit = 4;
+
+  // Fuel limit for the Wasm module (used for controlling execution steps).
+  uint64 fuel_limit = 5;
+
+  // The maximum size of the output buffer for stdout, in bytes.
+  uint64 stdout_limit = 6;
+
+  // The maximum size of the output buffer for stderr, in bytes.
+  uint64 stderr_limit = 7;
+}
+
+message WasmExecutionOutput {
+  // The output produced by the Wasm module's stdout.
+  bytes stdout = 1;
+
+  // The output produced by the Wasm module's stderr.
+  bytes stderr = 2;
+
+  // The amount of memory used during execution in bytes.
+  uint64 memory_used = 3;
+
+  // The amount of fuel consumed during execution.
+  uint64 fuel_consumed = 4;
+
+  // Whether the Wasm module ran successfully or not.
+  uint32 status = 5;
+
+  // The hash of the bytes if requested.
+  uint64 stdout_hash = 6;
+
+  // The hash of the token stream if requested.
+  uint64 stdout_token_stream_hash = 7;
+}
+
+message WasmExecutionRequest {
+  // The Wasm binary to be executed (as a byte array).
+  repeated bytes wasm_binary_arr = 1;
+
+  repeated WasmExecutionInput inputs = 2;
+
+  // Preferred compression type for bytes.
+  CompressionType compression = 9;
+
+  // Option to return only the hash of the bytes and token stream hash.
+  bool return_hash_only = 10;
+}
+
+message WasmExecutionResponse {
+  repeated WasmExecutionOutput outputs = 1;
+}
+
+// The service definition for executing Wasm modules.
+service WasmExecutor {
+  // Executes a Wasm module with the provided inputs and returns the results.
+  rpc Execute (WasmExecutionRequest) returns (WasmExecutionResponse);
+}

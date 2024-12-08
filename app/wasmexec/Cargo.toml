@@ -1,0 +1,27 @@
+[package]
+name = "wasmexec"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
+[[bin]]
+name = "codegen"
+path = "src/codegen/main.rs"
+
+
+
+[dependencies]
+wasmtime = "*"
+wasi-common = "*"
+anyhow = "*"
+log = "*"
+lazy_static = "*"
+tonic= { version = "*", features = ["zstd"] }
+tonic-build="*"
+prost = "0.13.3"
+async-trait = "0.1.83"
+tokio = { version = "*", features = ["rt-multi-thread", "macros", "time"] }
+xxhash-rust = { version = "*", features = ["const_xxh64"] }

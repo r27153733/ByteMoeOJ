@@ -1,0 +1,62 @@
+syntax = "v1"
+
+info (
+	title:   "题目"
+	desc:    "题目系统"
+	author:  "r27153733"
+	email:   "r27153733@gmail.com"
+	date:    "2024-12-28"
+	version: "v1"
+)
+
+type (
+	Example {
+		Input string `json:"input"`
+		Output string `json:"output"`
+	}
+
+	Problem {
+		ID string `json:"id"`
+		Title string `json:"title"`
+		Content string `json:"content"`
+		Example []Example `json:"example"`
+		InitCode string `json:"init_code"`
+		Lang []uint8 `json:"lang"`
+		Status uint8 `json:"status"`
+		Difficulty uint8  `json:"difficulty"`
+		PassRate uint8 `json:"pass_rate"`
+	}
+
+	GetProblemReq {
+		ID string `form:"id"`
+	}
+
+	ListProblemReq {
+		GroupID string `form:"group_id,optional"`
+		SearchString string `form:"contains_string"`
+		Page int `form:"page,optional"`
+		PageSize int `form:"page_size,optional"`
+	}
+
+	ListProblemResp {
+		List []Problem `json:"list"`
+		Total int `json:"total,optional"`
+		Page int `json:"page,optional"`
+		PageSize int `json:"page_size,optional"`
+	}
+)
+
+@server (
+	prefix: problem
+	group:  problem
+	middleware: TryAuth
+)
+service moeojapi {
+	@doc "题目信息"
+	@handler GetProblem
+	get / (GetProblemReq) returns (Problem)
+
+	@doc "题目列表"
+	@handler ListProblem
+	get /list (ListProblemReq) returns (ListProblemResp)
+}

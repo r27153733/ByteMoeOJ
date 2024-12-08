@@ -1,0 +1,47 @@
+syntax = "v1"
+
+info (
+	title:   "用户"
+	desc:    "用户系统"
+	author:  "r27153733"
+	email:   "r27153733@gmail.com"
+	date:    "2024-12-10"
+	version: "v1"
+)
+
+type (
+	LoginReq {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+	UserInfo {
+		ID string `json:"id"`
+		Name string `json:"name"`
+	}
+	UserInfoToken {
+		UserInfo
+		Token string `json:"token"`
+	}
+	GetUserReq {
+		ID string `form:"id"`
+	}
+)
+
+@server (
+	prefix: user
+	group:  user
+)
+service moeojapi {
+	@doc "用户信息"
+	@handler GetUser
+	get / (GetUserReq) returns (UserInfo)
+
+	@doc "注册"
+	@handler register
+	post /register (LoginReq) returns (UserInfoToken)
+
+	@doc "登录"
+	@handler login
+	post /login (LoginReq) returns (UserInfoToken)
+}
+

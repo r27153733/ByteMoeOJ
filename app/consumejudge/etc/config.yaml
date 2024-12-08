@@ -1,0 +1,23 @@
+Name: moejudge.consume
+Log:
+  Encoding: plain
+WasmExecRPC:
+  Timeout: 0
+  Endpoints:
+    - localhost:50051
+#  Etcd:
+#    Hosts:
+#      - HOST
+#    key: store.rpc
+  NonBlock: true
+
+Kafka:
+  Group: judge
+  Topics:
+    - MoeJudge
+  Version: 4.0.0
+  Addr: 127.0.0.1:9092
+  Brokers:
+    - 127.0.0.1:9092
+
+DataSourceName: user=postgres host=127.0.0.1 port=5432 dbname=byte_moe_judge sslmode=disable

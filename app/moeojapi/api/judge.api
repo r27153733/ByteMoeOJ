@@ -1,0 +1,121 @@
+syntax = "v1"
+
+info (
+    title:   "判题接口"
+    desc:    "用于在线判题系统的判题 API"
+    author:  "r27153733"
+    email:   "r27153733@gmail.com"
+    date:    "2025-01-04"
+    version: "v1"
+)
+
+type (
+        // 判题结果
+    JudgeResult {
+        ID string `json:"id"`
+        UserID string `json:"user_id"`
+        Status uint8 `json:"status"` // 判题状态，如 0：等待、1：通过、2：错误、3：超时、4：运行时错误等
+        Code string `json:"code"`
+        Lang uint8 `json:"lang"` // 编程语言
+        Message string `json:"message,optional"` // 结果描述
+        TimeUsed uint64 `json:"time_used,optional"` // 用时
+        MemoryUsed uint64 `json:"memory_used,optional"` // 使用内存
+    }
+
+        // 提交判题请求
+    JudgeReq {
+        ProblemID string `json:"problem_id"`
+        Code string `json:"code"`
+        Lang uint8 `json:"lang"` // 编程语言
+    }
+
+        // 提交判题响应
+    JudgeResp {
+        Result JudgeResult `json:"result"`
+    }
+
+        // 判题状态查询请求
+    JudgeStatusReq {
+        JudgeID string `form:"judge_id""`
+    }
+
+        // 判题状态查询响应
+    JudgeStatusResp {
+        JudgeID string `json:"judge_id"`
+    }
+
+        // 判题列表查询请求
+    ListJudgeReq {
+        ID string `form:"id,optional"`
+        UserID string `form:"user_id,optional"` // 可选，根据用户 ID 查询
+        ProblemID string `form:"problem_id,optional"` // 可选，根据题目 ID 查询
+        GroupID string `form:"group_id,optional"`
+        Status uint8 `form:"status,optional"` // 可选，根据判题状态查询
+        Page int `form:"page,optional"` // 分页页码
+        PageSize int `form:"page_size,optional"` // 分页大小
+    }
+
+        // 判题列表查询响应
+    ListJudgeResp {
+        List []JudgeResult `json:"list"` // 判题结果列表
+        Total int `json:"total"` // 总记录数
+        Page int `json:"page,optional"` // 当前页码
+        PageSize int `json:"page_size,optional"` // 当前页大小
+    }
+
+    TryReq {
+        ProblemID string `json:"problem_id"`
+        Code string `json:"code"`
+        Lang uint8 `json:"lang"` // 编程语言
+    }
+
+    TryResp {
+       Output string `json:"output"`
+    }
+
+    WasmReq {
+        ProblemID string `json:"problem_id"`
+        Code string `json:"code"`
+        Lang uint8 `json:"lang"` // 编程语言
+    }
+
+    WasmResp {
+        WasmBinary []byte `json:"wasm_binary"`
+    }
+)
+
+@server (
+    prefix: judge
+    group:  judge
+    middleware: TryAuth
+)
+
+service moeojapi {
+    @doc "查询判题列表"
+    @handler ListJudge
+    get /list (ListJudgeReq) returns (ListJudgeResp)
+}
+
+@server (
+    prefix: judge
+    group:  judge
+    middleware: Auth
+)
+
+service moeojapi {
+    @doc "提交判题请求"
+    @handler SubmitJudge
+    post /submit (JudgeReq) returns (JudgeResp)
+
+    @doc "查询判题状态"
+    @handler GetJudgeStatus
+    get /status (JudgeStatusReq) returns (JudgeStatusResp)
+
+    @doc "尝试运行"
+    @handler Try
+    get /try (TryReq) returns (TryResp)
+
+    @doc "获取判题Wasm"
+    @handler GetWasm
+    get /wasm (WasmReq) returns (WasmResp)
+}
