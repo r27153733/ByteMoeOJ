@@ -16,6 +16,8 @@ var (
 )
 
 func main() {
+	flag.Parse()
+
 	if *list {
 		_, err := os.Stdout.Write(register.List())
 		if err != nil {
