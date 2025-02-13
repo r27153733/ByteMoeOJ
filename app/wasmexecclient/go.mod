@@ -3,7 +3,7 @@ module github.com/r27153733/ByteMoeOJ/app/wasmexecclient
 go 1.23.3
 
 require (
-	github.com/r27153733/fastgozero v0.0.0-20241225151124-8ce278b66e2d
+	github.com/r27153733/fastgozero v0.0.0-20250206164948-afd32e3bd8a8
 	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.4
 )

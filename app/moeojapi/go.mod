@@ -5,7 +5,7 @@ go 1.23.3
 require (
 	github.com/cespare/xxhash v1.1.0
 	github.com/dchest/siphash v1.2.3
-	github.com/r27153733/ByteMoeOJ/lib v0.0.0-20250210125842-1182ad495d86
+	github.com/r27153733/ByteMoeOJ/lib v0.0.0-20250212075548-ff841c9fa5ec
 	github.com/r27153733/fastgozero v0.0.0-20250206164948-afd32e3bd8a8
 	github.com/valyala/bytebufferpool v1.0.0
 	github.com/valyala/fasthttp v1.58.0

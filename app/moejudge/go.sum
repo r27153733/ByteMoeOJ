@@ -171,8 +171,14 @@ github.com/prometheus/procfs v0.15.1 h1:YagwOFzUgYfKKHX6Dr+sHT7km/hxC76UB0leargg
 github.com/prometheus/procfs v0.15.1/go.mod h1:fB45yRUv8NstnjriLhBQLuOUt+WW4BsoGhij/e3PBqk=
 github.com/r27153733/ByteMoeOJ/app/wasmexecclient v0.0.0-20250210035243-184692c96149 h1:N0VNhRmRDoTRZbrXk/VE4xOUVjmv9hWLu65yTatFD6E=
 github.com/r27153733/ByteMoeOJ/app/wasmexecclient v0.0.0-20250210035243-184692c96149/go.mod h1:SDbJ1kLy4CGvGgMKF4G/SxKT/Fp5A3rseGr1Ngm6g6Y=
+github.com/r27153733/ByteMoeOJ/app/wasmexecclient v0.0.0-20250212075548-ff841c9fa5ec h1:7kXjwrq2D9RqB3KdEuZDtLdr+8LI2t5jYC8YGwFb91M=
+github.com/r27153733/ByteMoeOJ/app/wasmexecclient v0.0.0-20250212075548-ff841c9fa5ec/go.mod h1:SDbJ1kLy4CGvGgMKF4G/SxKT/Fp5A3rseGr1Ngm6g6Y=
 github.com/r27153733/ByteMoeOJ/lib v0.0.0-20250210035243-184692c96149 h1:8rTSVP+pHqo32b68u8QpsMIteHTsbSUdjz+2Hqag63Y=
 github.com/r27153733/ByteMoeOJ/lib v0.0.0-20250210035243-184692c96149/go.mod h1:qaRtGftwyDJppI+S6xi/23t4dFJbzYmt0Sn6klimvZo=
+github.com/r27153733/ByteMoeOJ/lib v0.0.0-20250210125842-1182ad495d86 h1:VfYGW9tOykj//p6Ljd1yCPC6j/zZQEDJPeDmA1D6eLo=
+github.com/r27153733/ByteMoeOJ/lib v0.0.0-20250210125842-1182ad495d86/go.mod h1:qaRtGftwyDJppI+S6xi/23t4dFJbzYmt0Sn6klimvZo=
+github.com/r27153733/ByteMoeOJ/lib v0.0.0-20250212075548-ff841c9fa5ec h1:8ZX65fZweKnLdHRNZXDwt9h1abj5RKk57i954NF8bf4=
+github.com/r27153733/ByteMoeOJ/lib v0.0.0-20250212075548-ff841c9fa5ec/go.mod h1:qaRtGftwyDJppI+S6xi/23t4dFJbzYmt0Sn6klimvZo=
 github.com/r27153733/fastgozero v0.0.0-20250206164948-afd32e3bd8a8 h1:ZTHHXNbcuV0u4PH6PCihOnSGMXdjv89HiUM5XpjM6s0=
 github.com/r27153733/fastgozero v0.0.0-20250206164948-afd32e3bd8a8/go.mod h1:c52EU1sHW9fKrpxGz/Sy+o+jU6PYg7gDHwmhPKcgC0o=
 github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 h1:N/ElC8H3+5XpJzTSTfLsJV/mx9Q9g7kxmchpfZyxgzM=

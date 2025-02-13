@@ -121,6 +121,8 @@ github.com/prometheus/procfs v0.15.1 h1:YagwOFzUgYfKKHX6Dr+sHT7km/hxC76UB0leargg
 github.com/prometheus/procfs v0.15.1/go.mod h1:fB45yRUv8NstnjriLhBQLuOUt+WW4BsoGhij/e3PBqk=
 github.com/r27153733/fastgozero v0.0.0-20241225151124-8ce278b66e2d h1:R1YJRsCShkWugPMaI6eg87Kf4b5me884hID/GWjDT7w=
 github.com/r27153733/fastgozero v0.0.0-20241225151124-8ce278b66e2d/go.mod h1:c52EU1sHW9fKrpxGz/Sy+o+jU6PYg7gDHwmhPKcgC0o=
+github.com/r27153733/fastgozero v0.0.0-20250206164948-afd32e3bd8a8 h1:ZTHHXNbcuV0u4PH6PCihOnSGMXdjv89HiUM5XpjM6s0=
+github.com/r27153733/fastgozero v0.0.0-20250206164948-afd32e3bd8a8/go.mod h1:c52EU1sHW9fKrpxGz/Sy+o+jU6PYg7gDHwmhPKcgC0o=
 github.com/redis/go-redis/v9 v9.7.0 h1:HhLSs+B6O021gwzl+locl0zEDnyNkxMtf/Z3NNBMa9E=
 github.com/redis/go-redis/v9 v9.7.0/go.mod h1:f6zhXITC7JUJIlPEiBOTXxJgPLdZcA93GewI7inzyWw=
 github.com/rogpeppe/go-internal v1.10.0 h1:TMyTOH3F/DB16zRVcYyreMH6GnZZrwQVAoYjRBZyWFQ=

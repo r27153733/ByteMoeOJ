@@ -5,8 +5,8 @@ go 1.23.3
 require (
 	github.com/IBM/sarama v1.45.0
 	github.com/jackc/pgx/v5 v5.7.2
-	github.com/r27153733/ByteMoeOJ/app/wasmexecclient v0.0.0-20250210035243-184692c96149
-	github.com/r27153733/ByteMoeOJ/lib v0.0.0-20250210035243-184692c96149
+	github.com/r27153733/ByteMoeOJ/app/wasmexecclient v0.0.0-20250212075548-ff841c9fa5ec
+	github.com/r27153733/ByteMoeOJ/lib v0.0.0-20250212075548-ff841c9fa5ec
 	github.com/r27153733/fastgozero v0.0.0-20250206164948-afd32e3bd8a8
 	github.com/valyala/bytebufferpool v1.0.0
 	google.golang.org/grpc v1.70.0
