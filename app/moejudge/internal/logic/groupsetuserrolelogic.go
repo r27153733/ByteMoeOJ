@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/r27153733/ByteMoeOJ/app/moejudge/model"
+	"github.com/r27153733/ByteMoeOJ/lib/uuid"
 
 	"github.com/r27153733/ByteMoeOJ/app/moejudge/internal/svc"
 	"github.com/r27153733/ByteMoeOJ/app/moejudge/pb"
@@ -27,19 +28,21 @@ func NewGroupSetUserRoleLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 
 // 设置组用户角色
 func (l *GroupSetUserRoleLogic) GroupSetUserRole(in *pb.GroupSetUserRoleReq) (*pb.GroupSetUserRoleResp, error) {
-	gu, err := l.svcCtx.DB.GroupUser.FindOneByUserIdGroupId(l.ctx, in.OperatorUserId, in.GroupId)
+	gu, err := l.svcCtx.DB.GroupUser.FindOneByUserIdGroupId(l.ctx, pb.ToUUID(in.OperatorUserId), pb.ToUUID(in.GroupId))
 	if err != nil {
 		return nil, err
 	}
 	if gu.Role < model.GroupUserRoleAdmin || int16(in.Role) > gu.Role {
 		return nil, errors.New("ban")
 	}
-	gu, err = l.svcCtx.DB.GroupUser.FindOneByUserIdGroupId(l.ctx, in.UserId, in.GroupId)
-	if err != nil {
-		return nil, err
-	}
+
 	gu.Role = int16(in.Role)
-	_, err = l.svcCtx.DB.GroupUser.Upsert(l.ctx, gu)
+	_, err = l.svcCtx.DB.GroupUser.UpsertByUserIdGroupId(l.ctx, &model.GroupUser{
+		Id:      uuid.NewUUIDV7(),
+		GroupId: pb.ToUUID(in.GroupId),
+		UserId:  pb.ToUUID(in.UserId),
+		Role:    int16(in.Role),
+	})
 	if err != nil {
 		return nil, err
 	}

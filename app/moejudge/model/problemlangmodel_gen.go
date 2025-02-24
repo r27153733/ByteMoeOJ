@@ -9,10 +9,13 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/r27153733/fastgozero/core/stores/builder"
 	"github.com/r27153733/fastgozero/core/stores/sqlx"
 	"github.com/r27153733/fastgozero/core/stringx"
+
+	"github.com/r27153733/ByteMoeOJ/lib/uuid"
 )
 
 var (
@@ -27,13 +30,13 @@ var (
 type (
 	problemLangModel interface {
 		Insert(ctx context.Context, data *ProblemLang) (sql.Result, error)
-		FindOne(ctx context.Context, id string) (*ProblemLang, error)
-		FindOneLock(ctx context.Context, id string) (*ProblemLang, error)
-		FindOneByProblemIdLang(ctx context.Context, problemId string, lang int16) (*ProblemLang, error)
-		DeleteByProblemIdLang(ctx context.Context, problemId string, lang int16) error
+		FindOne(ctx context.Context, id uuid.UUID) (*ProblemLang, error)
+		FindOneLock(ctx context.Context, id uuid.UUID) (*ProblemLang, error)
+		FindOneByProblemIdLang(ctx context.Context, problemId uuid.UUID, lang int16) (*ProblemLang, error)
+		DeleteByProblemIdLang(ctx context.Context, problemId uuid.UUID, lang int16) error
 		Update(ctx context.Context, data *ProblemLang) error
 		Upsert(ctx context.Context, data *ProblemLang) (sql.Result, error)
-		Delete(ctx context.Context, id string) error
+		Delete(ctx context.Context, id uuid.UUID) error
 	}
 
 	defaultProblemLangModel struct {
@@ -42,13 +45,14 @@ type (
 	}
 
 	ProblemLang struct {
-		Id          string `db:"id"`
-		ProblemId   string `db:"problem_id"`
-		Lang        int16  `db:"lang"`
-		InitCode    string `db:"init_code"`
-		Template    string `db:"template"`
-		TimeLimit   int64  `db:"time_limit"`
-		MemoryLimit int64  `db:"memory_limit"`
+		Id          uuid.UUID `db:"id"`
+		ProblemId   uuid.UUID `db:"problem_id"`
+		Lang        int16     `db:"lang"`
+		InitCode    string    `db:"init_code"`
+		Template    string    `db:"template"`
+		TimeLimit   int64     `db:"time_limit"`
+		MemoryLimit int64     `db:"memory_limit"`
+		CreatedAt   time.Time `db:"created_at"` // 创建时间
 	}
 )
 
@@ -59,13 +63,13 @@ func newProblemLangModel(conn sqlx.SqlConn) *defaultProblemLangModel {
 	}
 }
 
-func (m *defaultProblemLangModel) Delete(ctx context.Context, id string) error {
+func (m *defaultProblemLangModel) Delete(ctx context.Context, id uuid.UUID) error {
 	query := fmt.Sprintf("delete from %s where id = $1", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
 
-func (m *defaultProblemLangModel) FindOne(ctx context.Context, id string) (*ProblemLang, error) {
+func (m *defaultProblemLangModel) FindOne(ctx context.Context, id uuid.UUID) (*ProblemLang, error) {
 	query := fmt.Sprintf("select %s from %s where id = $1 limit 1", problemLangRows, m.table)
 	var resp ProblemLang
 	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
@@ -79,7 +83,7 @@ func (m *defaultProblemLangModel) FindOne(ctx context.Context, id string) (*Prob
 	}
 }
 
-func (m *defaultProblemLangModel) FindOneLock(ctx context.Context, id string) (*ProblemLang, error) {
+func (m *defaultProblemLangModel) FindOneLock(ctx context.Context, id uuid.UUID) (*ProblemLang, error) {
 	query := fmt.Sprintf("select %s from %s where id = $1 limit 1 for update", problemLangRows, m.table)
 	var resp ProblemLang
 	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
@@ -93,7 +97,7 @@ func (m *defaultProblemLangModel) FindOneLock(ctx context.Context, id string) (*
 	}
 }
 
-func (m *defaultProblemLangModel) FindOneByProblemIdLang(ctx context.Context, problemId string, lang int16) (*ProblemLang, error) {
+func (m *defaultProblemLangModel) FindOneByProblemIdLang(ctx context.Context, problemId uuid.UUID, lang int16) (*ProblemLang, error) {
 	var resp ProblemLang
 	query := fmt.Sprintf("select %s from %s where problem_id = $1 and lang = $2 limit 1", problemLangRows, m.table)
 	err := m.conn.QueryRowCtx(ctx, &resp, query, problemId, lang)
@@ -107,8 +111,8 @@ func (m *defaultProblemLangModel) FindOneByProblemIdLang(ctx context.Context, pr
 	}
 }
 
-func (m *defaultProblemLangModel) DeleteByProblemIdLang(ctx context.Context, problemId string, lang int16) error {
-	query := fmt.Sprintf("delete from %s where problem_id = $1 and lang = $2 limit 1", m.table)
+func (m *defaultProblemLangModel) DeleteByProblemIdLang(ctx context.Context, problemId uuid.UUID, lang int16) error {
+	query := fmt.Sprintf("delete from %s where problem_id = $1 and lang = $2", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, problemId, lang)
 	return err
 }
@@ -125,18 +129,18 @@ func (m *defaultProblemLangModel) Update(ctx context.Context, newData *ProblemLa
 	return err
 }
 
-func (m *defaultProblemLangModel) Upsert(ctx context.Context, newData *ProblemLang) (sql.Result, error) {
+func (m *defaultProblemLangModel) tableName() string {
+	return m.table
+}
+
+func (m *defaultProblemLangModel) Upsert(ctx context.Context, data *ProblemLang) (sql.Result, error) {
 	query := fmt.Sprintf(`
 		insert into %s (%s)
-		values ($1, $2, $3, $4, $5, $6, $7, $8)
+		values ($1, $2, $3, $4, $5, $6, $7)
 		on conflict (id)
 		do update set %s
 	`, m.table, problemLangRowsExpectAutoSet, problemLangRowsWithPlaceHolder)
 
-	ret, err := m.conn.ExecCtx(ctx, query, newData.Id, newData.ProblemId, newData.Lang, newData.InitCode, newData.Template, newData.TimeLimit, newData.MemoryLimit)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Id, data.ProblemId, data.Lang, data.InitCode, data.Template, data.TimeLimit, data.MemoryLimit)
 	return ret, err
-}
-
-func (m *defaultProblemLangModel) tableName() string {
-	return m.table
 }

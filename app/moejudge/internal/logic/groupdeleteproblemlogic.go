@@ -3,9 +3,8 @@ package logic
 import (
 	"context"
 	"errors"
-	"github.com/r27153733/ByteMoeOJ/app/moejudge/model"
-
 	"github.com/r27153733/ByteMoeOJ/app/moejudge/internal/svc"
+	"github.com/r27153733/ByteMoeOJ/app/moejudge/model"
 	"github.com/r27153733/ByteMoeOJ/app/moejudge/pb"
 
 	"github.com/r27153733/fastgozero/core/logx"
@@ -27,7 +26,7 @@ func NewGroupDeleteProblemLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 
 // 从组删除问题
 func (l *GroupDeleteProblemLogic) GroupDeleteProblem(in *pb.GroupDeleteProblemReq) (*pb.GroupDeleteProblemResp, error) {
-	gu, err := l.svcCtx.DB.GroupUser.FindOneByUserIdGroupId(l.ctx, in.OperatorUserId, in.GroupId)
+	gu, err := l.svcCtx.DB.GroupUser.FindOneByUserIdGroupId(l.ctx, pb.ToUUID(in.OperatorUserId), pb.ToUUID(in.GroupId))
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +34,7 @@ func (l *GroupDeleteProblemLogic) GroupDeleteProblem(in *pb.GroupDeleteProblemRe
 		return nil, errors.New("ban")
 	}
 
-	err = l.svcCtx.DB.GroupProblem.DeleteByProblemIdGroupId(l.ctx, in.ProblemId, in.GroupId)
+	err = l.svcCtx.DB.GroupProblem.DeleteByProblemIdGroupId(l.ctx, pb.ToUUID(in.ProblemId), pb.ToUUID(in.GroupId))
 	if err != nil {
 		return nil, err
 	}

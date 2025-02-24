@@ -9,10 +9,13 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/r27153733/fastgozero/core/stores/builder"
 	"github.com/r27153733/fastgozero/core/stores/sqlx"
 	"github.com/r27153733/fastgozero/core/stringx"
+
+	"github.com/r27153733/ByteMoeOJ/lib/uuid"
 )
 
 var (
@@ -27,13 +30,13 @@ var (
 type (
 	groupProblemModel interface {
 		Insert(ctx context.Context, data *GroupProblem) (sql.Result, error)
-		FindOne(ctx context.Context, id string) (*GroupProblem, error)
-		FindOneLock(ctx context.Context, id string) (*GroupProblem, error)
-		FindOneByProblemIdGroupId(ctx context.Context, problemId string, groupId string) (*GroupProblem, error)
-		DeleteByProblemIdGroupId(ctx context.Context, problemId string, groupId string) error
+		FindOne(ctx context.Context, id uuid.UUID) (*GroupProblem, error)
+		FindOneLock(ctx context.Context, id uuid.UUID) (*GroupProblem, error)
+		FindOneByProblemIdGroupId(ctx context.Context, problemId uuid.UUID, groupId uuid.UUID) (*GroupProblem, error)
+		DeleteByProblemIdGroupId(ctx context.Context, problemId uuid.UUID, groupId uuid.UUID) error
 		Update(ctx context.Context, data *GroupProblem) error
 		Upsert(ctx context.Context, data *GroupProblem) (sql.Result, error)
-		Delete(ctx context.Context, id string) error
+		Delete(ctx context.Context, id uuid.UUID) error
 	}
 
 	defaultGroupProblemModel struct {
@@ -42,9 +45,10 @@ type (
 	}
 
 	GroupProblem struct {
-		Id        string `db:"id"`
-		GroupId   string `db:"group_id"`
-		ProblemId string `db:"problem_id"`
+		Id        uuid.UUID `db:"id"`
+		GroupId   uuid.UUID `db:"group_id"`
+		ProblemId uuid.UUID `db:"problem_id"`
+		CreatedAt time.Time `db:"created_at"` // 创建时间
 	}
 )
 
@@ -55,13 +59,13 @@ func newGroupProblemModel(conn sqlx.SqlConn) *defaultGroupProblemModel {
 	}
 }
 
-func (m *defaultGroupProblemModel) Delete(ctx context.Context, id string) error {
+func (m *defaultGroupProblemModel) Delete(ctx context.Context, id uuid.UUID) error {
 	query := fmt.Sprintf("delete from %s where id = $1", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
 
-func (m *defaultGroupProblemModel) FindOne(ctx context.Context, id string) (*GroupProblem, error) {
+func (m *defaultGroupProblemModel) FindOne(ctx context.Context, id uuid.UUID) (*GroupProblem, error) {
 	query := fmt.Sprintf("select %s from %s where id = $1 limit 1", groupProblemRows, m.table)
 	var resp GroupProblem
 	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
@@ -75,7 +79,7 @@ func (m *defaultGroupProblemModel) FindOne(ctx context.Context, id string) (*Gro
 	}
 }
 
-func (m *defaultGroupProblemModel) FindOneLock(ctx context.Context, id string) (*GroupProblem, error) {
+func (m *defaultGroupProblemModel) FindOneLock(ctx context.Context, id uuid.UUID) (*GroupProblem, error) {
 	query := fmt.Sprintf("select %s from %s where id = $1 limit 1 for update", groupProblemRows, m.table)
 	var resp GroupProblem
 	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
@@ -89,7 +93,7 @@ func (m *defaultGroupProblemModel) FindOneLock(ctx context.Context, id string) (
 	}
 }
 
-func (m *defaultGroupProblemModel) FindOneByProblemIdGroupId(ctx context.Context, problemId string, groupId string) (*GroupProblem, error) {
+func (m *defaultGroupProblemModel) FindOneByProblemIdGroupId(ctx context.Context, problemId uuid.UUID, groupId uuid.UUID) (*GroupProblem, error) {
 	var resp GroupProblem
 	query := fmt.Sprintf("select %s from %s where problem_id = $1 and group_id = $2 limit 1", groupProblemRows, m.table)
 	err := m.conn.QueryRowCtx(ctx, &resp, query, problemId, groupId)
@@ -103,8 +107,8 @@ func (m *defaultGroupProblemModel) FindOneByProblemIdGroupId(ctx context.Context
 	}
 }
 
-func (m *defaultGroupProblemModel) DeleteByProblemIdGroupId(ctx context.Context, problemId string, groupId string) error {
-	query := fmt.Sprintf("delete from %s where problem_id = $1 and group_id = $2 limit 1", m.table)
+func (m *defaultGroupProblemModel) DeleteByProblemIdGroupId(ctx context.Context, problemId uuid.UUID, groupId uuid.UUID) error {
+	query := fmt.Sprintf("delete from %s where problem_id = $1 and group_id = $2", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, problemId, groupId)
 	return err
 }
@@ -121,18 +125,18 @@ func (m *defaultGroupProblemModel) Update(ctx context.Context, newData *GroupPro
 	return err
 }
 
-func (m *defaultGroupProblemModel) Upsert(ctx context.Context, newData *GroupProblem) (sql.Result, error) {
+func (m *defaultGroupProblemModel) tableName() string {
+	return m.table
+}
+
+func (m *defaultGroupProblemModel) Upsert(ctx context.Context, data *GroupProblem) (sql.Result, error) {
 	query := fmt.Sprintf(`
 		insert into %s (%s)
-		values ($1, $2, $3, $4, $5, $6, $7, $8)
+		values ($1, $2, $3)
 		on conflict (id)
 		do update set %s
 	`, m.table, groupProblemRowsExpectAutoSet, groupProblemRowsWithPlaceHolder)
 
-	ret, err := m.conn.ExecCtx(ctx, query, newData.Id, newData.GroupId, newData.ProblemId)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Id, data.GroupId, data.ProblemId)
 	return ret, err
-}
-
-func (m *defaultGroupProblemModel) tableName() string {
-	return m.table
 }

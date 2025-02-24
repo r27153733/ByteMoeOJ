@@ -3,6 +3,7 @@ package model
 import (
 	"context"
 	"fmt"
+	"github.com/r27153733/ByteMoeOJ/lib/uuid"
 	"github.com/r27153733/fastgozero/core/stores/sqlx"
 )
 
@@ -13,7 +14,7 @@ type (
 	// and implement the added methods in customGroupProblemModel.
 	GroupProblemModel interface {
 		groupProblemModel
-		DeleteByGroupId(ctx context.Context, id string) error
+		DeleteByGroupId(ctx context.Context, id uuid.UUID) error
 		withSession(session sqlx.Session) GroupProblemModel
 	}
 
@@ -33,7 +34,7 @@ func (m *customGroupProblemModel) withSession(session sqlx.Session) GroupProblem
 	return NewGroupProblemModel(sqlx.NewSqlConnFromSession(session))
 }
 
-func (m *defaultGroupProblemModel) DeleteByGroupId(ctx context.Context, id string) error {
+func (m *defaultGroupProblemModel) DeleteByGroupId(ctx context.Context, id uuid.UUID) error {
 	query := fmt.Sprintf("delete from %s where group_id = $1", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err

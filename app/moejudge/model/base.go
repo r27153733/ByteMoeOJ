@@ -12,6 +12,8 @@ type DBCtx struct {
 	GroupUser    GroupUserModel
 	GroupProblem GroupProblemModel
 	Problem      ProblemModel
+	ProblemLang  ProblemLangModel
+	ProblemData  ProblemDataModel
 }
 
 func NewCtx(conn sqlx.SqlConn) DBCtx {
@@ -22,6 +24,8 @@ func NewCtx(conn sqlx.SqlConn) DBCtx {
 		GroupUser:    NewGroupUserModel(conn),
 		GroupProblem: NewGroupProblemModel(conn),
 		Problem:      NewProblemModel(conn),
+		ProblemLang:  NewProblemLangModel(conn),
+		ProblemData:  NewProblemDataModel(conn),
 	}
 }
 

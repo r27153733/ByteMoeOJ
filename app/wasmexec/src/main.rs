@@ -15,6 +15,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let svc = WasmExecutorServer::new(wasm_server)
     .max_encoding_message_size(usize::MAX)
     .max_decoding_message_size(usize::MAX)
+    .accept_compressed(CompressionEncoding::Zstd)
     .send_compressed(CompressionEncoding::Zstd);
 
     println!("Server listening on {}", addr);

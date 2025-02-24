@@ -31,7 +31,7 @@ func (m *default{{.upperStartCamelObject}}Model) FindOneBy{{.upperField}}(ctx co
 
 func (m *default{{.upperStartCamelObject}}Model) DeleteBy{{.upperField}}(ctx context.Context, {{.in}}) error {
 	{{if .withCache}}
-{{else}}query := fmt.Sprintf("delete from %s where {{.originalField}} limit 1", m.table )
+{{else}}query := fmt.Sprintf("delete from %s where {{.originalField}}", m.table )
 	_, err := m.conn.ExecCtx(ctx, query, {{.lowerStartCamelField}})
     return err
 }{{end}}

@@ -9,10 +9,13 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/r27153733/fastgozero/core/stores/builder"
 	"github.com/r27153733/fastgozero/core/stores/sqlx"
 	"github.com/r27153733/fastgozero/core/stringx"
+
+	"github.com/r27153733/ByteMoeOJ/lib/uuid"
 )
 
 var (
@@ -27,11 +30,11 @@ var (
 type (
 	problemDataModel interface {
 		Insert(ctx context.Context, data *ProblemData) (sql.Result, error)
-		FindOne(ctx context.Context, id string) (*ProblemData, error)
-		FindOneLock(ctx context.Context, id string) (*ProblemData, error)
+		FindOne(ctx context.Context, id uuid.UUID) (*ProblemData, error)
+		FindOneLock(ctx context.Context, id uuid.UUID) (*ProblemData, error)
 		Update(ctx context.Context, data *ProblemData) error
 		Upsert(ctx context.Context, data *ProblemData) (sql.Result, error)
-		Delete(ctx context.Context, id string) error
+		Delete(ctx context.Context, id uuid.UUID) error
 	}
 
 	defaultProblemDataModel struct {
@@ -40,13 +43,14 @@ type (
 	}
 
 	ProblemData struct {
-		Id              string `db:"id"`
-		ProblemId       string `db:"problem_id"`
-		Input           string `db:"input"`
-		Output          string `db:"output"`
-		OutputHash      int64  `db:"output_hash"`
-		OutputTokenHash int64  `db:"output_token_hash"`
-		OutputLen       int64  `db:"output_len"`
+		Id              uuid.UUID `db:"id"`
+		ProblemId       uuid.UUID `db:"problem_id"`
+		Input           string    `db:"input"`
+		Output          string    `db:"output"`
+		OutputHash      int64     `db:"output_hash"`
+		OutputTokenHash int64     `db:"output_token_hash"`
+		OutputLen       int64     `db:"output_len"`
+		CreatedAt       time.Time `db:"created_at"` // 创建时间
 	}
 )
 
@@ -57,13 +61,13 @@ func newProblemDataModel(conn sqlx.SqlConn) *defaultProblemDataModel {
 	}
 }
 
-func (m *defaultProblemDataModel) Delete(ctx context.Context, id string) error {
+func (m *defaultProblemDataModel) Delete(ctx context.Context, id uuid.UUID) error {
 	query := fmt.Sprintf("delete from %s where id = $1", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
 
-func (m *defaultProblemDataModel) FindOne(ctx context.Context, id string) (*ProblemData, error) {
+func (m *defaultProblemDataModel) FindOne(ctx context.Context, id uuid.UUID) (*ProblemData, error) {
 	query := fmt.Sprintf("select %s from %s where id = $1 limit 1", problemDataRows, m.table)
 	var resp ProblemData
 	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
@@ -77,7 +81,7 @@ func (m *defaultProblemDataModel) FindOne(ctx context.Context, id string) (*Prob
 	}
 }
 
-func (m *defaultProblemDataModel) FindOneLock(ctx context.Context, id string) (*ProblemData, error) {
+func (m *defaultProblemDataModel) FindOneLock(ctx context.Context, id uuid.UUID) (*ProblemData, error) {
 	query := fmt.Sprintf("select %s from %s where id = $1 limit 1 for update", problemDataRows, m.table)
 	var resp ProblemData
 	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
@@ -103,18 +107,18 @@ func (m *defaultProblemDataModel) Update(ctx context.Context, data *ProblemData)
 	return err
 }
 
+func (m *defaultProblemDataModel) tableName() string {
+	return m.table
+}
+
 func (m *defaultProblemDataModel) Upsert(ctx context.Context, data *ProblemData) (sql.Result, error) {
 	query := fmt.Sprintf(`
 		insert into %s (%s)
-		values ($1, $2, $3, $4, $5, $6, $7, $8)
+		values ($1, $2, $3, $4, $5, $6, $7)
 		on conflict (id)
 		do update set %s
 	`, m.table, problemDataRowsExpectAutoSet, problemDataRowsWithPlaceHolder)
 
 	ret, err := m.conn.ExecCtx(ctx, query, data.Id, data.ProblemId, data.Input, data.Output, data.OutputHash, data.OutputTokenHash, data.OutputLen)
 	return ret, err
-}
-
-func (m *defaultProblemDataModel) tableName() string {
-	return m.table
 }

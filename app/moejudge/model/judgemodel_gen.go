@@ -9,10 +9,13 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/r27153733/fastgozero/core/stores/builder"
 	"github.com/r27153733/fastgozero/core/stores/sqlx"
 	"github.com/r27153733/fastgozero/core/stringx"
+
+	"github.com/r27153733/ByteMoeOJ/lib/uuid"
 )
 
 var (
@@ -27,11 +30,11 @@ var (
 type (
 	judgeModel interface {
 		Insert(ctx context.Context, data *Judge) (sql.Result, error)
-		FindOne(ctx context.Context, id string) (*Judge, error)
-		FindOneLock(ctx context.Context, id string) (*Judge, error)
+		FindOne(ctx context.Context, id uuid.UUID) (*Judge, error)
+		FindOneLock(ctx context.Context, id uuid.UUID) (*Judge, error)
 		Update(ctx context.Context, data *Judge) error
 		Upsert(ctx context.Context, data *Judge) (sql.Result, error)
-		Delete(ctx context.Context, id string) error
+		Delete(ctx context.Context, id uuid.UUID) error
 	}
 
 	defaultJudgeModel struct {
@@ -40,14 +43,15 @@ type (
 	}
 
 	Judge struct {
-		Id         string `db:"id"`
-		UserId     string `db:"user_id"`
-		Status     int16  `db:"status"`
-		Code       string `db:"code"`
-		Lang       int16  `db:"lang"`
-		TimeUsed   int64  `db:"time_used"`
-		MemoryUsed int64  `db:"memory_used"`
-		ProblemId  string `db:"problem_id"`
+		Id         uuid.UUID `db:"id"`
+		UserId     uuid.UUID `db:"user_id"`
+		Status     int16     `db:"status"`
+		Code       string    `db:"code"`
+		Lang       int16     `db:"lang"`
+		TimeUsed   int64     `db:"time_used"`
+		MemoryUsed int64     `db:"memory_used"`
+		ProblemId  uuid.UUID `db:"problem_id"`
+		CreatedAt  time.Time `db:"created_at"` // 创建时间
 	}
 )
 
@@ -58,13 +62,13 @@ func newJudgeModel(conn sqlx.SqlConn) *defaultJudgeModel {
 	}
 }
 
-func (m *defaultJudgeModel) Delete(ctx context.Context, id string) error {
+func (m *defaultJudgeModel) Delete(ctx context.Context, id uuid.UUID) error {
 	query := fmt.Sprintf("delete from %s where id = $1", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
 
-func (m *defaultJudgeModel) FindOne(ctx context.Context, id string) (*Judge, error) {
+func (m *defaultJudgeModel) FindOne(ctx context.Context, id uuid.UUID) (*Judge, error) {
 	query := fmt.Sprintf("select %s from %s where id = $1 limit 1", judgeRows, m.table)
 	var resp Judge
 	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
@@ -78,7 +82,7 @@ func (m *defaultJudgeModel) FindOne(ctx context.Context, id string) (*Judge, err
 	}
 }
 
-func (m *defaultJudgeModel) FindOneLock(ctx context.Context, id string) (*Judge, error) {
+func (m *defaultJudgeModel) FindOneLock(ctx context.Context, id uuid.UUID) (*Judge, error) {
 	query := fmt.Sprintf("select %s from %s where id = $1 limit 1 for update", judgeRows, m.table)
 	var resp Judge
 	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
@@ -104,6 +108,10 @@ func (m *defaultJudgeModel) Update(ctx context.Context, data *Judge) error {
 	return err
 }
 
+func (m *defaultJudgeModel) tableName() string {
+	return m.table
+}
+
 func (m *defaultJudgeModel) Upsert(ctx context.Context, data *Judge) (sql.Result, error) {
 	query := fmt.Sprintf(`
 		insert into %s (%s)
@@ -114,8 +122,4 @@ func (m *defaultJudgeModel) Upsert(ctx context.Context, data *Judge) (sql.Result
 
 	ret, err := m.conn.ExecCtx(ctx, query, data.Id, data.UserId, data.Status, data.Code, data.Lang, data.TimeUsed, data.MemoryUsed, data.ProblemId)
 	return ret, err
-}
-
-func (m *defaultJudgeModel) tableName() string {
-	return m.table
 }

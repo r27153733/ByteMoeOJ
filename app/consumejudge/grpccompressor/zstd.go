@@ -64,7 +64,6 @@ func acquireZstdReleaseWriter(w io.Writer) (io.WriteCloser, error) {
 
 type ZstdReleaseReader struct {
 	*zstd.Decoder
-	isEnd bool
 }
 
 func acquireZstdReleaseReader(r io.Reader) (io.Reader, error) {
@@ -76,13 +75,13 @@ func acquireZstdReleaseReader(r io.Reader) (io.Reader, error) {
 }
 
 func (r *ZstdReleaseReader) Read(p []byte) (int, error) {
-	if r.isEnd {
+	if r.Decoder == nil {
 		return 0, io.EOF
 	}
 	read, err := r.Decoder.Read(p)
 	if err == io.EOF {
-		r.isEnd = true
 		releaseZstdReader(r.Decoder)
+		r.Decoder = nil
 	}
 
 	return read, err

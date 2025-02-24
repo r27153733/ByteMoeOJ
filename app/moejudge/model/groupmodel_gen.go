@@ -9,10 +9,13 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/r27153733/fastgozero/core/stores/builder"
 	"github.com/r27153733/fastgozero/core/stores/sqlx"
 	"github.com/r27153733/fastgozero/core/stringx"
+
+	"github.com/r27153733/ByteMoeOJ/lib/uuid"
 )
 
 var (
@@ -27,11 +30,11 @@ var (
 type (
 	groupModel interface {
 		Insert(ctx context.Context, data *Group) (sql.Result, error)
-		FindOne(ctx context.Context, id string) (*Group, error)
-		FindOneLock(ctx context.Context, id string) (*Group, error)
+		FindOne(ctx context.Context, id uuid.UUID) (*Group, error)
+		FindOneLock(ctx context.Context, id uuid.UUID) (*Group, error)
 		Update(ctx context.Context, data *Group) error
 		Upsert(ctx context.Context, data *Group) (sql.Result, error)
-		Delete(ctx context.Context, id string) error
+		Delete(ctx context.Context, id uuid.UUID) error
 	}
 
 	defaultGroupModel struct {
@@ -40,9 +43,10 @@ type (
 	}
 
 	Group struct {
-		Id      string `db:"id"`
-		Title   string `db:"title"`
-		Content string `db:"content"`
+		Id        uuid.UUID `db:"id"`
+		Title     string    `db:"title"`
+		Content   string    `db:"content"`
+		CreatedAt time.Time `db:"created_at"` // 创建时间
 	}
 )
 
@@ -53,13 +57,13 @@ func newGroupModel(conn sqlx.SqlConn) *defaultGroupModel {
 	}
 }
 
-func (m *defaultGroupModel) Delete(ctx context.Context, id string) error {
+func (m *defaultGroupModel) Delete(ctx context.Context, id uuid.UUID) error {
 	query := fmt.Sprintf("delete from %s where id = $1", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
 
-func (m *defaultGroupModel) FindOne(ctx context.Context, id string) (*Group, error) {
+func (m *defaultGroupModel) FindOne(ctx context.Context, id uuid.UUID) (*Group, error) {
 	query := fmt.Sprintf("select %s from %s where id = $1 limit 1", groupRows, m.table)
 	var resp Group
 	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
@@ -73,7 +77,7 @@ func (m *defaultGroupModel) FindOne(ctx context.Context, id string) (*Group, err
 	}
 }
 
-func (m *defaultGroupModel) FindOneLock(ctx context.Context, id string) (*Group, error) {
+func (m *defaultGroupModel) FindOneLock(ctx context.Context, id uuid.UUID) (*Group, error) {
 	query := fmt.Sprintf("select %s from %s where id = $1 limit 1 for update", groupRows, m.table)
 	var resp Group
 	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
@@ -99,18 +103,18 @@ func (m *defaultGroupModel) Update(ctx context.Context, data *Group) error {
 	return err
 }
 
+func (m *defaultGroupModel) tableName() string {
+	return m.table
+}
+
 func (m *defaultGroupModel) Upsert(ctx context.Context, data *Group) (sql.Result, error) {
 	query := fmt.Sprintf(`
 		insert into %s (%s)
-		values ($1, $2, $3, $4, $5, $6, $7, $8)
+		values ($1, $2, $3)
 		on conflict (id)
 		do update set %s
 	`, m.table, groupRowsExpectAutoSet, groupRowsWithPlaceHolder)
 
 	ret, err := m.conn.ExecCtx(ctx, query, data.Id, data.Title, data.Content)
 	return ret, err
-}
-
-func (m *defaultGroupModel) tableName() string {
-	return m.table
 }

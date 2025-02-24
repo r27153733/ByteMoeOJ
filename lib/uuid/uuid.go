@@ -2,9 +2,12 @@ package uuid
 
 import (
 	"bytes"
+	"database/sql/driver"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"github.com/r27153733/ByteMoeOJ/lib/stringu"
+	"github.com/r27153733/ByteMoeOJ/lib/unsafetool"
 	"math/rand/v2"
 	"sync"
 	"time"
@@ -30,11 +33,45 @@ const reverseHexTable = "" +
 	"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"
 
 var (
-	uuidPool sync.Pool
-	//uuidString sync.Pool
+	uuidPool   sync.Pool
+	uuidString sync.Pool
 )
 
 type UUID [16]byte
+
+func (id UUID) Value() (driver.Value, error) {
+	buf := uuidString.Get()
+	if buf == nil {
+		s := stringu.B2S(make([]byte, 36))
+		buf = &s
+	}
+	p := buf.(*string)
+	id.Encode(stringu.S2B(*p))
+	unsafetool.PointerAnyToAny[string](&buf)
+	return buf, nil
+}
+
+func (id *UUID) Scan(src any) error {
+	if src == nil {
+		*id = UUID{}
+		return nil
+	}
+
+	switch sr := src.(type) {
+	case string:
+		var err error
+		*id, err = ParseBytes(stringu.S2B(sr))
+		if err != nil {
+			return err
+		}
+
+		uuidString.Put(unsafetool.AnyToPointer[string](src))
+		return nil
+	}
+
+	return fmt.Errorf("cannot scan %T", src)
+}
+
 type UUIDs []UUID
 
 func (ids UUIDs) Len() int {
@@ -61,10 +98,25 @@ func GetUUIDBuf() *UUID {
 	return &UUID{}
 }
 
+func ReleaseUUIDStrBuf(p *string) {
+	uuidPool.Put(p)
+}
+
+func GetUUIDStrBuf() *string {
+	v := uuidPool.Get()
+	if v != nil {
+		return v.(*string)
+	}
+	bp := new([36]byte)
+	s := unsafe.String((*byte)((unsafe.Pointer)(bp)), 36)
+	return &s
+}
+
 func (id UUID) String() string {
-	dst := make([]byte, 36)
+	s := *GetUUIDStrBuf()
+	dst := stringu.S2B(s)
 	id.Encode(dst)
-	return stringu.B2S(dst)
+	return s
 }
 
 func (id UUID) Encode(dst []byte) {
@@ -157,6 +209,18 @@ func ParseBytes(b []byte) (uuid UUID, err error) {
 	}
 
 	return uuid, nil
+}
+
+func Parse(s string) (uuid UUID, err error) {
+	return ParseBytes(stringu.S2B(s))
+}
+
+func ParseOrZero(s string) (uuid UUID) {
+	parseBytes, err := ParseBytes(stringu.S2B(s))
+	if err != nil {
+		return UUID{}
+	}
+	return parseBytes
 }
 
 func DecodeUUIDBytes(b []byte, uuid *UUID) error {

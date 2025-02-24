@@ -41,9 +41,9 @@ func (l *SubmitJudgeLogic) SubmitJudge(in *pb.JudgeReq) (*pb.JudgeResp, error) {
 	}
 
 	j := &model.Judge{
-		Id:         id.String(),
-		UserId:     in.UserId,
-		ProblemId:  in.ProblemId,
+		Id:         id,
+		UserId:     pb.ToUUID(in.UserId),
+		ProblemId:  pb.ToUUID(in.ProblemId),
 		Status:     0,
 		Code:       stringu.B2S(in.Code),
 		Lang:       int16(in.Lang),
@@ -55,8 +55,8 @@ func (l *SubmitJudgeLogic) SubmitJudge(in *pb.JudgeReq) (*pb.JudgeResp, error) {
 
 	return &pb.JudgeResp{
 		Result: &pb.JudgeResult{
-			Id:         j.Id,
-			UserId:     j.UserId,
+			Id:         pb.ToPbUUID(j.Id),
+			UserId:     pb.ToPbUUID(j.UserId),
 			Status:     uint32(j.Status),
 			Code:       j.Code,
 			Lang:       pb.LangType(j.Lang),

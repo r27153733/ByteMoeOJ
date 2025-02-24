@@ -41,10 +41,10 @@ func (l *TryLogic) Try(in *pb.TryReq) (*pb.TryResp, error) {
 		Inputs: []*wasmexecutor.WasmExecutionInput{
 			{
 				Stdin:       in.Input,
-				MemoryLimit: 1145141919810,
-				FuelLimit:   1145141919810,
-				StdoutLimit: 1145141919810,
-				StderrLimit: 1145141919810,
+				MemoryLimit: 114514191,
+				FuelLimit:   114514191,
+				StdoutLimit: 114514191,
+				StderrLimit: 114514191,
 			},
 		},
 		Compression:    wasm.CompressionType_None,

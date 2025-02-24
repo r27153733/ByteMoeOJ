@@ -11,4 +11,6 @@ import (
 	"github.com/r27153733/fastgozero/core/stringx"
 
 	{{.third}}
+
+	"github.com/r27153733/ByteMoeOJ/lib/uuid"
 )

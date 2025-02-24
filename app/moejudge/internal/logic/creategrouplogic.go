@@ -29,7 +29,7 @@ func (l *CreateGroupLogic) CreateGroup(in *pb.CreateGroupReq) (*pb.CreateGroupRe
 	resp := &pb.CreateGroupResp{}
 	err := l.svcCtx.DB.TransactCtx(l.ctx, func(ctx context.Context, db model.DBCtx) error {
 		g := model.Group{
-			Id:      uuid.NewUUIDV7().String(),
+			Id:      uuid.NewUUIDV7(),
 			Title:   in.Title,
 			Content: in.Content,
 		}
@@ -39,16 +39,16 @@ func (l *CreateGroupLogic) CreateGroup(in *pb.CreateGroupReq) (*pb.CreateGroupRe
 		}
 
 		gu := model.GroupUser{
-			Id:      uuid.NewUUIDV7().String(),
+			Id:      uuid.NewUUIDV7(),
 			GroupId: g.Id,
-			UserId:  in.UserId,
+			UserId:  pb.ToUUID(in.UserId),
 			Role:    model.GroupUserRoleOwner,
 		}
 		_, err = db.GroupUser.Insert(ctx, &gu)
 		if err != nil {
 			return err
 		}
-		resp.Id = g.Id
+		resp.Id = pb.ToPbUUID(g.Id)
 		return nil
 	})
 	if err != nil {

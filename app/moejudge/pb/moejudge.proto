@@ -8,12 +8,14 @@ enum LangType {
   c = 2;
   cpp = 3;
   java = 4;
+
+  all = 66;
 }
 
 // 判题结果
 message JudgeResult {
-  string id = 1;             // 判题结果 ID
-  string user_id = 2;    // 用户 ID
+  UUID id = 1;             // 判题结果 ID
+  UUID user_id = 2;    // 用户 ID
   uint32 status = 3;         // 判题状态
   string code = 4;       // 代码内容
   LangType lang = 5;       // 编程语言
@@ -23,8 +25,8 @@ message JudgeResult {
 
 // 提交判题请求
 message JudgeReq {
-  string user_id = 1;
-  string problem_id = 2; // 题目 ID
+  UUID user_id = 1;
+  UUID problem_id = 2; // 题目 ID
   bytes code = 3;       // 代码内容
   LangType lang = 4;       // 编程语言
 }
@@ -36,8 +38,8 @@ message JudgeResp {
 
 // 判题状态查询请求
 message JudgeStatusReq {
-  string user_id = 1;
-  string judge_id = 2; // 提交 ID
+  UUID user_id = 1;
+  UUID judge_id = 2; // 提交 ID
 }
 
 // 判题状态查询响应
@@ -47,28 +49,26 @@ message JudgeStatusResp {
 
 // 判题列表查询请求
 message ListJudgeReq {
-  string judge_id = 1;         // ID（可选）
-  string user_id = 2;    // 用户 ID（可选）
-  string problem_id = 3; // 题目 ID（可选）
-  string group_id = 4;   // 组 ID（可选）
-  LangType lang = 5;
-  uint32 status = 6;     // 判题状态（可选）
-  int32 page = 7;        // 分页页码（可选）
-  int32 page_size = 8;   // 分页大小（可选）
+  UUID judge_id = 1;         // ID（可选）
+  UUID user_id = 2;    // 用户 ID（可选）
+  UUID problem_id = 3; // 题目 ID（可选）
+  UUID group_id = 4;   // 组 ID（可选）
+  int32 lang = 5;
+  int32 status = 6;     // 判题状态（可选）
+  uint32 page = 7;        // 分页页码（可选）
+  uint32 page_size = 8;   // 分页大小（可选）
 }
 
 // 判题列表查询响应
 message ListJudgeResp {
   repeated JudgeResult list = 1; // 判题结果列表
-  int32 total = 2;              // 总记录数
-  int32 page = 3;               // 当前页码
-  int32 page_size = 4;          // 当前页大小
+  uint32 total = 2;              // 总记录数
 }
 
 // 尝试运行请求
 message TryReq {
-  string user_id = 1;
-  string problem_id = 2; // 题目 ID
+  UUID user_id = 1;
+  UUID problem_id = 2; // 题目 ID
   bytes code = 3;       // 代码内容
   bytes input = 4;
   LangType lang = 5;       // 编程语言
@@ -81,8 +81,8 @@ message TryResp {
 
 // 获取 Wasm 请求
 message WasmReq {
-  string user_id = 1;
-  string problem_id = 2; // 题目 ID
+  UUID user_id = 1;
+  UUID problem_id = 2; // 题目 ID
   bytes code = 3;       // 代码内容
   LangType lang = 4;       // 编程语言
 }
@@ -94,31 +94,32 @@ message WasmResp {
 }
 
 message Group {
-  string id = 1;
-  string name = 2;
+  UUID id = 1;
+  string title = 2;
+  string content = 3;
 }
 
 message CreateGroupReq {
-  string user_id = 1;
+  UUID user_id = 1;
   string Title = 2;
   string Content = 3;
 }
 
 message CreateGroupResp {
-  string id = 1;
+  UUID id = 1;
 }
 
 message DeleteGroupReq {
-  string id = 1;
-  string operator_user_id = 2;
+  UUID id = 1;
+  UUID operator_user_id = 2;
 }
 
 message DeleteGroupResp {}
 
 message ListGroupReq {
-  string group_id = 1;
-  string user_id = 2;
-  uint32 min_role = 3;
+  UUID group_id = 1;
+  UUID user_id = 2;
+  int32 min_role = 3;
 }
 
 message ListGroupResp {
@@ -126,59 +127,67 @@ message ListGroupResp {
 }
 
 message GroupSetUserRoleReq {
-  string operator_user_id = 1;
-  string group_id = 2;
-  string user_id = 3;
+  UUID operator_user_id = 1;
+  UUID group_id = 2;
+  UUID user_id = 3;
   uint32 role = 4;
 }
 
 message GroupSetUserRoleResp {}
 
 message GroupDeleteUserReq {
-  string operator_user_id = 1;
-  string group_id = 2;
-  string user_id = 3;
+  UUID operator_user_id = 1;
+  UUID group_id = 2;
+  UUID user_id = 3;
 }
 
 message GroupDeleteUserResp {}
 
 message GroupAddProblemReq {
-  string operator_user_id = 1;
-  string group_id = 2;
-  string problem_id = 3;
+  UUID operator_user_id = 1;
+  UUID group_id = 2;
+  UUID problem_id = 3;
 }
 
 message GroupAddProblemResp {}
 
 message GroupDeleteProblemReq {
-  string operator_user_id = 1;
-  string group_id = 2;
-  string problem_id = 3;
+  UUID operator_user_id = 1;
+  UUID group_id = 2;
+  UUID problem_id = 3;
 }
 
 message GroupDeleteProblemResp {}
 
 message LangCtx {
-  uint32 lang = 1;
+  LangType lang = 1;
   string init_code = 2;
   string template = 3;
+  uint64 time_limit = 4;
+  uint64 memory_limit = 5;
 }
 
 message JudgeData {
-  string input = 1;
-  string output = 2;
+  bytes input = 1;
+  bytes output = 2;
 }
 
 message CreateProblemReq {
-  string title = 1;
-  string content = 2;
-  uint32 difficulty = 3;
-  repeated LangCtx lang_ctx_arr = 4;
-  repeated JudgeData judge_data_arr = 5;
+  UUID operator_user_id = 1;
+  string title = 2;
+  string content = 3;
+  uint32 difficulty = 4;
+  repeated LangCtx lang_ctx_arr = 5;
+  repeated JudgeData judge_data_arr = 6;
 }
 
 message CreateProblemResp {
-  string id = 1;
+  UUID id = 1;
+}
+
+message UUID {
+    fixed64 hi = 1;
+    fixed64 lo = 2;
 }
 
 // 定义判题服务

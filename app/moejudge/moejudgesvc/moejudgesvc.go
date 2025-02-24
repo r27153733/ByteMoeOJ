@@ -42,6 +42,7 @@ type (
 	ListJudgeResp          = pb.ListJudgeResp
 	TryReq                 = pb.TryReq
 	TryResp                = pb.TryResp
+	UUID                   = pb.UUID
 	WasmReq                = pb.WasmReq
 	WasmResp               = pb.WasmResp
 

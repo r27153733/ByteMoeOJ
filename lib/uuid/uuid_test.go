@@ -106,3 +106,23 @@ func TestZeroAlloc(t *testing.T) {
 		t.Fatal()
 	}
 }
+
+func TestZeroAllocSQL(t *testing.T) {
+	avg := testing.AllocsPerRun(1000, func() {
+		u := NewUUID()
+		value, err := u.Value()
+		if err != nil {
+			t.Fatal(err)
+		}
+		_ = value
+		err = u.Scan(value)
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	if avg > 0 {
+		fmt.Println(avg)
+		t.Fatal()
+	}
+}

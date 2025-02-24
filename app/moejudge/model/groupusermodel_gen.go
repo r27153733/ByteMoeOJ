@@ -9,10 +9,13 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/r27153733/fastgozero/core/stores/builder"
 	"github.com/r27153733/fastgozero/core/stores/sqlx"
 	"github.com/r27153733/fastgozero/core/stringx"
+
+	"github.com/r27153733/ByteMoeOJ/lib/uuid"
 )
 
 var (
@@ -27,13 +30,13 @@ var (
 type (
 	groupUserModel interface {
 		Insert(ctx context.Context, data *GroupUser) (sql.Result, error)
-		FindOne(ctx context.Context, id string) (*GroupUser, error)
-		FindOneLock(ctx context.Context, id string) (*GroupUser, error)
-		FindOneByUserIdGroupId(ctx context.Context, userId string, groupId string) (*GroupUser, error)
-		DeleteByUserIdGroupId(ctx context.Context, userId string, groupId string) error
+		FindOne(ctx context.Context, id uuid.UUID) (*GroupUser, error)
+		FindOneLock(ctx context.Context, id uuid.UUID) (*GroupUser, error)
+		FindOneByUserIdGroupId(ctx context.Context, userId uuid.UUID, groupId uuid.UUID) (*GroupUser, error)
+		DeleteByUserIdGroupId(ctx context.Context, userId uuid.UUID, groupId uuid.UUID) error
 		Update(ctx context.Context, data *GroupUser) error
 		Upsert(ctx context.Context, data *GroupUser) (sql.Result, error)
-		Delete(ctx context.Context, id string) error
+		Delete(ctx context.Context, id uuid.UUID) error
 	}
 
 	defaultGroupUserModel struct {
@@ -42,10 +45,11 @@ type (
 	}
 
 	GroupUser struct {
-		Id      string `db:"id"`
-		GroupId string `db:"group_id"`
-		UserId  string `db:"user_id"`
-		Role    int16  `db:"role"`
+		Id        uuid.UUID `db:"id"`
+		GroupId   uuid.UUID `db:"group_id"`
+		UserId    uuid.UUID `db:"user_id"`
+		Role      int16     `db:"role"`
+		CreatedAt time.Time `db:"created_at"` // 创建时间
 	}
 )
 
@@ -56,13 +60,13 @@ func newGroupUserModel(conn sqlx.SqlConn) *defaultGroupUserModel {
 	}
 }
 
-func (m *defaultGroupUserModel) Delete(ctx context.Context, id string) error {
+func (m *defaultGroupUserModel) Delete(ctx context.Context, id uuid.UUID) error {
 	query := fmt.Sprintf("delete from %s where id = $1", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
 
-func (m *defaultGroupUserModel) FindOne(ctx context.Context, id string) (*GroupUser, error) {
+func (m *defaultGroupUserModel) FindOne(ctx context.Context, id uuid.UUID) (*GroupUser, error) {
 	query := fmt.Sprintf("select %s from %s where id = $1 limit 1", groupUserRows, m.table)
 	var resp GroupUser
 	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
@@ -76,7 +80,7 @@ func (m *defaultGroupUserModel) FindOne(ctx context.Context, id string) (*GroupU
 	}
 }
 
-func (m *defaultGroupUserModel) FindOneLock(ctx context.Context, id string) (*GroupUser, error) {
+func (m *defaultGroupUserModel) FindOneLock(ctx context.Context, id uuid.UUID) (*GroupUser, error) {
 	query := fmt.Sprintf("select %s from %s where id = $1 limit 1 for update", groupUserRows, m.table)
 	var resp GroupUser
 	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
@@ -90,7 +94,7 @@ func (m *defaultGroupUserModel) FindOneLock(ctx context.Context, id string) (*Gr
 	}
 }
 
-func (m *defaultGroupUserModel) FindOneByUserIdGroupId(ctx context.Context, userId string, groupId string) (*GroupUser, error) {
+func (m *defaultGroupUserModel) FindOneByUserIdGroupId(ctx context.Context, userId uuid.UUID, groupId uuid.UUID) (*GroupUser, error) {
 	var resp GroupUser
 	query := fmt.Sprintf("select %s from %s where user_id = $1 and group_id = $2 limit 1", groupUserRows, m.table)
 	err := m.conn.QueryRowCtx(ctx, &resp, query, userId, groupId)
@@ -104,8 +108,8 @@ func (m *defaultGroupUserModel) FindOneByUserIdGroupId(ctx context.Context, user
 	}
 }
 
-func (m *defaultGroupUserModel) DeleteByUserIdGroupId(ctx context.Context, userId string, groupId string) error {
-	query := fmt.Sprintf("delete from %s where user_id = $1 and group_id = $2 limit 1", m.table)
+func (m *defaultGroupUserModel) DeleteByUserIdGroupId(ctx context.Context, userId uuid.UUID, groupId uuid.UUID) error {
+	query := fmt.Sprintf("delete from %s where user_id = $1 and group_id = $2", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, userId, groupId)
 	return err
 }
@@ -122,18 +126,18 @@ func (m *defaultGroupUserModel) Update(ctx context.Context, newData *GroupUser) 
 	return err
 }
 
-func (m *defaultGroupUserModel) Upsert(ctx context.Context, newData *GroupUser) (sql.Result, error) {
+func (m *defaultGroupUserModel) tableName() string {
+	return m.table
+}
+
+func (m *defaultGroupUserModel) Upsert(ctx context.Context, data *GroupUser) (sql.Result, error) {
 	query := fmt.Sprintf(`
 		insert into %s (%s)
-		values ($1, $2, $3, $4, $5, $6, $7, $8)
+		values ($1, $2, $3, $4)
 		on conflict (id)
 		do update set %s
 	`, m.table, groupUserRowsExpectAutoSet, groupUserRowsWithPlaceHolder)
 
-	ret, err := m.conn.ExecCtx(ctx, query, newData.Id, newData.GroupId, newData.UserId, newData.Role)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Id, data.GroupId, data.UserId, data.Role)
 	return ret, err
-}
-
-func (m *defaultGroupUserModel) tableName() string {
-	return m.table
 }

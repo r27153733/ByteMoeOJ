@@ -3,9 +3,8 @@ package logic
 import (
 	"context"
 	"errors"
-	"github.com/r27153733/ByteMoeOJ/app/moejudge/model"
-
 	"github.com/r27153733/ByteMoeOJ/app/moejudge/internal/svc"
+	"github.com/r27153733/ByteMoeOJ/app/moejudge/model"
 	"github.com/r27153733/ByteMoeOJ/app/moejudge/pb"
 
 	"github.com/r27153733/fastgozero/core/logx"
@@ -27,7 +26,7 @@ func NewDeleteGroupLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Delet
 
 // 删除组
 func (l *DeleteGroupLogic) DeleteGroup(in *pb.DeleteGroupReq) (*pb.DeleteGroupResp, error) {
-	gu, err := l.svcCtx.DB.GroupUser.FindOneByUserIdGroupId(l.ctx, in.OperatorUserId, in.Id)
+	gu, err := l.svcCtx.DB.GroupUser.FindOneByUserIdGroupId(l.ctx, pb.ToUUID(in.OperatorUserId), pb.ToUUID(in.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -36,15 +35,15 @@ func (l *DeleteGroupLogic) DeleteGroup(in *pb.DeleteGroupReq) (*pb.DeleteGroupRe
 	}
 
 	err = l.svcCtx.DB.TransactCtx(l.ctx, func(ctx context.Context, db model.DBCtx) error {
-		err = db.Group.Delete(l.ctx, in.Id)
+		err = db.Group.Delete(l.ctx, pb.ToUUID(in.Id))
 		if err != nil {
 			return err
 		}
-		err = db.GroupProblem.DeleteByGroupId(ctx, in.Id)
+		err = db.GroupProblem.DeleteByGroupId(ctx, pb.ToUUID(in.Id))
 		if err != nil {
 			return err
 		}
-		err = db.GroupUser.DeleteByGroupId(ctx, in.Id)
+		err = db.GroupUser.DeleteByGroupId(ctx, pb.ToUUID(in.Id))
 		if err != nil {
 			return err
 		}

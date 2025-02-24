@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/r27153733/ByteMoeOJ/app/moejudge/model"
+	"github.com/r27153733/ByteMoeOJ/lib/uuid"
 
 	"github.com/r27153733/ByteMoeOJ/app/moejudge/internal/svc"
 	"github.com/r27153733/ByteMoeOJ/app/moejudge/pb"
@@ -27,7 +28,7 @@ func NewGroupAddProblemLogic(ctx context.Context, svcCtx *svc.ServiceContext) *G
 
 // 向组添加问题
 func (l *GroupAddProblemLogic) GroupAddProblem(in *pb.GroupAddProblemReq) (*pb.GroupAddProblemResp, error) {
-	gu, err := l.svcCtx.DB.GroupUser.FindOneByUserIdGroupId(l.ctx, in.OperatorUserId, in.GroupId)
+	gu, err := l.svcCtx.DB.GroupUser.FindOneByUserIdGroupId(l.ctx, pb.ToUUID(in.OperatorUserId), pb.ToUUID(in.GroupId))
 	if err != nil {
 		return nil, err
 	}
@@ -36,15 +37,24 @@ func (l *GroupAddProblemLogic) GroupAddProblem(in *pb.GroupAddProblemReq) (*pb.G
 	}
 
 	err = l.svcCtx.DB.TransactCtx(l.ctx, func(ctx context.Context, db model.DBCtx) error {
-		_, err := db.Group.FindOneLock(l.ctx, in.GroupId)
+		_, err := db.Group.FindOneLock(l.ctx, pb.ToUUID(in.GroupId))
 		if err != nil {
 			return err
 		}
-		_, err = db.Problem.FindOneLock(l.ctx, in.ProblemId)
+
+		problem, err := db.Problem.FindOneLock(l.ctx, pb.ToUUID(in.ProblemId))
 		if err != nil {
 			return err
 		}
-		gp := model.GroupProblem{}
+		if problem.UserId != pb.ToUUID(in.OperatorUserId) {
+			return errors.New("ban")
+		}
+
+		gp := model.GroupProblem{
+			Id:        uuid.NewUUIDV7(),
+			GroupId:   pb.ToUUID(in.GroupId),
+			ProblemId: pb.ToUUID(in.ProblemId),
+		}
 		_, err = db.GroupProblem.Insert(l.ctx, &gp)
 		if err != nil {
 			return err

@@ -93,7 +93,8 @@ func init() {
 			zrpc.WithDialOption(
 				grpc.WithDefaultCallOptions(
 					grpc.UseCompressor(grpccompressor.ZstdName),
-					grpc.MaxCallRecvMsgSize(math.MaxInt)),
+					// 减一防止溢出
+					grpc.MaxCallRecvMsgSize(math.MaxInt-1)),
 			),
 		),
 	)
@@ -259,7 +260,7 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 
 			var id uuid.UUID
 			copy(id[:], message.Value)
-			judge, err := judgeModel.FindOne(context.Background(), id.String())
+			judge, err := judgeModel.FindOne(context.Background(), id)
 			if err != nil {
 				in := new(pb.JudgeReq)
 				err = proto.Unmarshal(message.Value[16:], in)
@@ -267,9 +268,9 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 					return err
 				}
 				judge = &model.Judge{
-					Id:         id.String(),
-					UserId:     in.UserId,
-					ProblemId:  in.ProblemId,
+					Id:         id,
+					UserId:     pb.ToUUID(in.UserId),
+					ProblemId:  pb.ToUUID(in.ProblemId),
 					Status:     0,
 					Code:       stringu.B2S(in.Code),
 					Lang:       int16(in.Lang),
@@ -356,13 +357,22 @@ func ConsumeJudgeCompiling(ctx context.Context, judge *model.Judge) error {
 	return ConsumeJudgeRunning(ctx, judge, buf.Bytes())
 }
 
+const langAll = 66
+
 func ConsumeJudgeRunning(ctx context.Context, judge *model.Judge, wasmBinary []byte) error {
 	judge.Status = int16(Running)
 	_ = judgeModel.Update(ctx, judge)
 
 	langCtx, err := problemLangModel.FindOneByProblemIdLang(ctx, judge.ProblemId, judge.Lang)
 	if err != nil {
-		return err
+		if errors.Is(err, model.ErrNotFound) {
+			langCtx, err = problemLangModel.FindOneByProblemIdLang(ctx, judge.ProblemId, langAll)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
 	}
 
 	datas, err := problemDataModel.FindJudgeDataHash(ctx, judge.ProblemId)
@@ -416,7 +426,7 @@ func ConsumeJudgeJudging(ctx context.Context, judge *model.Judge, outputs []*was
 		}
 
 		cases[i] = model.JudgeCase{
-			Id:            "",
+			Id:            uuid.UUID{},
 			JudgeId:       judge.Id,
 			ProblemDataId: datas[i].Id,
 			Status:        int16(status),

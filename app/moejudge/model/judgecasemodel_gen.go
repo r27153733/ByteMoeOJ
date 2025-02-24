@@ -9,10 +9,13 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/r27153733/fastgozero/core/stores/builder"
 	"github.com/r27153733/fastgozero/core/stores/sqlx"
 	"github.com/r27153733/fastgozero/core/stringx"
+
+	"github.com/r27153733/ByteMoeOJ/lib/uuid"
 )
 
 var (
@@ -27,11 +30,11 @@ var (
 type (
 	judgeCaseModel interface {
 		Insert(ctx context.Context, data *JudgeCase) (sql.Result, error)
-		FindOne(ctx context.Context, id string) (*JudgeCase, error)
-		FindOneLock(ctx context.Context, id string) (*JudgeCase, error)
+		FindOne(ctx context.Context, id uuid.UUID) (*JudgeCase, error)
+		FindOneLock(ctx context.Context, id uuid.UUID) (*JudgeCase, error)
 		Update(ctx context.Context, data *JudgeCase) error
 		Upsert(ctx context.Context, data *JudgeCase) (sql.Result, error)
-		Delete(ctx context.Context, id string) error
+		Delete(ctx context.Context, id uuid.UUID) error
 	}
 
 	defaultJudgeCaseModel struct {
@@ -40,13 +43,14 @@ type (
 	}
 
 	JudgeCase struct {
-		Id            string `db:"id"`
-		JudgeId       string `db:"judge_id"`
-		ProblemDataId string `db:"problem_data_id"`
-		Status        int16  `db:"status"`
-		TimeUsed      int64  `db:"time_used"`
-		MemoryUsed    int64  `db:"memory_used"`
-		Reason        string `db:"reason"`
+		Id            uuid.UUID `db:"id"`
+		JudgeId       uuid.UUID `db:"judge_id"`
+		ProblemDataId uuid.UUID `db:"problem_data_id"`
+		Status        int16     `db:"status"`
+		TimeUsed      int64     `db:"time_used"`
+		MemoryUsed    int64     `db:"memory_used"`
+		Reason        string    `db:"reason"`
+		CreatedAt     time.Time `db:"created_at"` // 创建时间
 	}
 )
 
@@ -57,13 +61,13 @@ func newJudgeCaseModel(conn sqlx.SqlConn) *defaultJudgeCaseModel {
 	}
 }
 
-func (m *defaultJudgeCaseModel) Delete(ctx context.Context, id string) error {
+func (m *defaultJudgeCaseModel) Delete(ctx context.Context, id uuid.UUID) error {
 	query := fmt.Sprintf("delete from %s where id = $1", m.table)
 	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
 
-func (m *defaultJudgeCaseModel) FindOne(ctx context.Context, id string) (*JudgeCase, error) {
+func (m *defaultJudgeCaseModel) FindOne(ctx context.Context, id uuid.UUID) (*JudgeCase, error) {
 	query := fmt.Sprintf("select %s from %s where id = $1 limit 1", judgeCaseRows, m.table)
 	var resp JudgeCase
 	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
@@ -77,7 +81,7 @@ func (m *defaultJudgeCaseModel) FindOne(ctx context.Context, id string) (*JudgeC
 	}
 }
 
-func (m *defaultJudgeCaseModel) FindOneLock(ctx context.Context, id string) (*JudgeCase, error) {
+func (m *defaultJudgeCaseModel) FindOneLock(ctx context.Context, id uuid.UUID) (*JudgeCase, error) {
 	query := fmt.Sprintf("select %s from %s where id = $1 limit 1 for update", judgeCaseRows, m.table)
 	var resp JudgeCase
 	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
@@ -103,18 +107,18 @@ func (m *defaultJudgeCaseModel) Update(ctx context.Context, data *JudgeCase) err
 	return err
 }
 
+func (m *defaultJudgeCaseModel) tableName() string {
+	return m.table
+}
+
 func (m *defaultJudgeCaseModel) Upsert(ctx context.Context, data *JudgeCase) (sql.Result, error) {
 	query := fmt.Sprintf(`
 		insert into %s (%s)
-		values ($1, $2, $3, $4, $5, $6, $7, $8)
+		values ($1, $2, $3, $4, $5, $6, $7)
 		on conflict (id)
 		do update set %s
 	`, m.table, judgeCaseRowsExpectAutoSet, judgeCaseRowsWithPlaceHolder)
 
 	ret, err := m.conn.ExecCtx(ctx, query, data.Id, data.JudgeId, data.ProblemDataId, data.Status, data.TimeUsed, data.MemoryUsed, data.Reason)
 	return ret, err
-}
-
-func (m *defaultJudgeCaseModel) tableName() string {
-	return m.table
 }

@@ -157,4 +157,4 @@ model:
       type: string
     uuid:
       null_type: sql.NullString
-      type: string
+      type: uuid.UUID
