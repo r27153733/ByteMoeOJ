@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestName(t *testing.T) {
+func TestToUUID1(t *testing.T) {
 	a := &UUID{
 		Hi: 5437209496599500033,
 		Lo: 2251311124549082293,
@@ -19,8 +19,7 @@ func TestName(t *testing.T) {
 	fmt.Println(id.String())
 }
 
-func TestName1(t *testing.T) {
-
+func TestToUUID2(t *testing.T) {
 	id := uuid.ParseOrZero("0194ea8e-27ae-7fa0-ae09-a28a77cd984c")
 	pbUUID := ToPbUUID(id)
 	fmt.Println(pbUUID)

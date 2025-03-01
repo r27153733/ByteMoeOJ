@@ -6,8 +6,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/r27153733/ByteMoeOJ/lib/anyu"
 	"github.com/r27153733/ByteMoeOJ/lib/stringu"
-	"github.com/r27153733/ByteMoeOJ/lib/unsafetool"
 	"math/rand/v2"
 	"sync"
 	"time"
@@ -47,8 +47,7 @@ func (id UUID) Value() (driver.Value, error) {
 	}
 	p := buf.(*string)
 	id.Encode(stringu.S2B(*p))
-	unsafetool.PointerAnyToAny[string](&buf)
-	return buf, nil
+	return anyu.PointerToValueAny[string](p), nil
 }
 
 func (id *UUID) Scan(src any) error {
@@ -65,7 +64,7 @@ func (id *UUID) Scan(src any) error {
 			return err
 		}
 
-		uuidString.Put(unsafetool.AnyToPointer[string](src))
+		uuidString.Put(anyu.AnyToPointer[string](src))
 		return nil
 	}
 

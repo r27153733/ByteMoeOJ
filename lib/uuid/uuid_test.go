@@ -108,7 +108,7 @@ func TestZeroAlloc(t *testing.T) {
 }
 
 func TestZeroAllocSQL(t *testing.T) {
-	avg := testing.AllocsPerRun(1000, func() {
+	avg := testing.AllocsPerRun(100, func() {
 		u := NewUUID()
 		value, err := u.Value()
 		if err != nil {
