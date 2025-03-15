@@ -2,23 +2,15 @@ package pb
 
 import (
 	"github.com/r27153733/ByteMoeOJ/lib/uuid"
-	"reflect"
 	"unsafe"
 )
-
-func init() {
-	t := reflect.TypeOf(UUID{})
-	field, _ := t.FieldByName("Hi")
-	Offset = field.Offset
-}
-
-var Offset uintptr
 
 func ToUUIDPointer(id *UUID) *uuid.UUID {
 	if id == nil {
 		return nil
 	}
-	return (*uuid.UUID)((unsafe.Pointer)((uintptr)(unsafe.Pointer(id)) + Offset))
+
+	return (*uuid.UUID)(unsafe.Pointer(&(id.Hi)))
 }
 
 func ToUUID(id *UUID) uuid.UUID {
