@@ -23,7 +23,7 @@ type (
 		Token string `json:"token"`
 	}
 	GetUserReq {
-		ID string `form:"id"`
+		ID string `form:"id,optional"`
 	}
 )
 
@@ -32,10 +32,6 @@ type (
 	group:  user
 )
 service moeojapi {
-	@doc "用户信息"
-	@handler GetUser
-	get / (GetUserReq) returns (UserInfo)
-
 	@doc "注册"
 	@handler register
 	post /register (LoginReq) returns (UserInfoToken)
@@ -43,5 +39,16 @@ service moeojapi {
 	@doc "登录"
 	@handler login
 	post /login (LoginReq) returns (UserInfoToken)
+}
+
+@server (
+	prefix: user
+	group:  user
+	middleware: Auth
+)
+service moeojapi {
+	@doc "用户信息"
+	@handler GetUser
+	get / (GetUserReq) returns (UserInfo)
 }
 

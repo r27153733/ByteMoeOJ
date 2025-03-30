@@ -87,12 +87,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
 			{
-				// 用户信息
-				Method:  http.MethodGet,
-				Path:    "/",
-				Handler: user.GetUserHandler(serverCtx),
-			},
-			{
 				// 登录
 				Method:  http.MethodPost,
 				Path:    "/login",
@@ -105,6 +99,21 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: user.RegisterHandler(serverCtx),
 			},
 		},
+		rest.WithPrefix("/user"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.Auth},
+			[]rest.Route{
+				{
+					// 用户信息
+					Method:  http.MethodGet,
+					Path:    "/",
+					Handler: user.GetUserHandler(serverCtx),
+				},
+			}...,
+		),
 		rest.WithPrefix("/user"),
 	)
 }

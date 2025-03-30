@@ -13,7 +13,7 @@ type GetProblemReq struct {
 }
 
 type GetUserReq struct {
-	ID string `form:"id"`
+	ID string `form:"id,optional"`
 }
 
 type JudgeReq struct {
