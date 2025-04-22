@@ -36,9 +36,9 @@ func SetLimits() {
 		panic(err)
 	}
 
-	// 4GB
-	lim.Max = MB << 12
-	lim.Cur = MB << 12
+	// 8GB
+	lim.Max = MB << 13
+	lim.Cur = MB << 13
 
 	err = unix.Setrlimit(unix.RLIMIT_AS, &lim)
 	if err != nil {
